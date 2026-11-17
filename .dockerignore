@@ -1,0 +1,10 @@
+.git
+.gitignore
+.gitattributes
+.idea
+.vscode
+vendor
+.env
+storage/smarty/compile/*
+storage/smarty/cache/*
+*.log

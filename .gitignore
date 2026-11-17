@@ -1,0 +1,9 @@
+/.env
+/vendor/
+
+/storage/smarty/compile/*
+/storage/smarty/cache/*
+!/storage/smarty/compile/.gitkeep
+!/storage/smarty/cache/.gitkeep
+
+*.log
