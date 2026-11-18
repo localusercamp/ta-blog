@@ -4,6 +4,7 @@ FROM composer:2.7 AS vendor
 
 WORKDIR /app
 COPY composer.json composer.lock ./
+COPY app/helpers.php app/helpers.php
 RUN composer install \
     --no-dev \
     --no-interaction \

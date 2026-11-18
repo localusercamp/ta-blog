@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "${APP_PORT:-8080}:80"
     environment:
@@ -13,6 +15,12 @@ services:
       DB_USERNAME: ${DB_USERNAME:-blog}
       DB_PASSWORD: ${DB_PASSWORD:-blog_secret}
       APP_DEBUG: ${APP_DEBUG:-0}
+    volumes:
+      - ./app:/var/www/html/app
+      - ./config:/var/www/html/config
+      - ./public:/var/www/html/public
+      - ./resources:/var/www/html/resources
+      - smarty_storage:/var/www/html/storage
     depends_on:
       db:
         condition: service_healthy
@@ -27,6 +35,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
       interval: 5s
@@ -36,3 +45,4 @@ services:
 
 volumes:
   mysql_data:
+  smarty_storage:
