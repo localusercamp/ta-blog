@@ -2,8 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Controllers\CategoryController;
+use App\Controllers\HomeController;
+use App\Controllers\PostController;
+use App\Exceptions\NotFoundException;
 use App\Facades\DB;
 use App\Facades\View;
+use App\Repositories\CategoryRepository;
+use App\Repositories\PostRepository;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -21,7 +27,26 @@ DB::register(new DB(
     password: config('db.password'),
 ));
 
-View::render('index.tpl', [
-    'title'    => config('app.name'),
-    'debug'    => config('app.debug'),
-]);
+$categoryRepository = new CategoryRepository();
+$postRepository = new PostRepository();
+
+$path = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', '/');
+
+if ($path === 'index.php') {
+    $path = '';
+}
+
+try {
+    if ($path === '') {
+        (new HomeController($categoryRepository, $postRepository))->index();
+    } elseif (preg_match('#^category/(\d+)$#', $path, $matches) === 1) {
+        (new CategoryController($categoryRepository, $postRepository))->show((int) $matches[1]);
+    } elseif (preg_match('#^post/(\d+)$#', $path, $matches) === 1) {
+        (new PostController($postRepository))->show((int) $matches[1]);
+    } else {
+        throw new NotFoundException('Page not found.');
+    }
+} catch (NotFoundException) {
+    http_response_code(404);
+    View::render('404.tpl', ['title' => 'Страница не найдена']);
+}
