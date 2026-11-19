@@ -11,7 +11,7 @@ use App\Repositories\PostRepository;
 
 final class CategoryController
 {
-    private const POSTS_PER_PAGE = 10;
+    private const POSTS_PER_PAGE = 6;
 
     public function __construct(
         private readonly CategoryRepository $categories,
@@ -40,7 +40,7 @@ final class CategoryController
             offset: ($page - 1) * self::POSTS_PER_PAGE,
         );
 
-        View::render('category.tpl', [
+        View::render('pages/category.tpl', [
             'title' => $category->title,
             'category' => $category,
             'posts' => $posts,

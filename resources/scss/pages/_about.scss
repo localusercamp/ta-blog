@@ -1,0 +1,14 @@
+.prose {
+    max-width: var(--content-width);
+}
+
+.prose__text {
+    margin: 0 0 1.25em;
+    font-size: 1.05rem;
+    line-height: 1.75;
+}
+
+.prose__link {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}

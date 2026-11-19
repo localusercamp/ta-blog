@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\CategoryController;
 use App\Controllers\HomeController;
+use App\Controllers\PageController;
 use App\Controllers\PostController;
 use App\Exceptions\NotFoundException;
 use App\Facades\DB;
@@ -19,34 +20,52 @@ View::register(new View(
     cache_dir: config('paths.cache'),
 ));
 
-DB::register(new DB(
-    host: config('db.host'),
-    port: config('db.port'),
-    database: config('db.database'),
-    username: config('db.username'),
-    password: config('db.password'),
-));
-
-$categoryRepository = new CategoryRepository();
-$postRepository = new PostRepository();
-
-$path = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', '/');
-
-if ($path === 'index.php') {
-    $path = '';
-}
-
 try {
+    DB::register(new DB(
+        host: config('db.host'),
+        port: config('db.port'),
+        database: config('db.database'),
+        username: config('db.username'),
+        password: config('db.password'),
+    ));
+
+    $categoryRepository = new CategoryRepository();
+    $postRepository = new PostRepository();
+    $pageController = new PageController($categoryRepository, $postRepository);
+
+    $categories = $categoryRepository->getAllCategories();
+
+    View::share([
+        'appName' => config('app.name'),
+        'navCategories' => array_slice($categories, 0, 5),
+        'footerCategories' => $categories,
+    ]);
+
+    $path = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/', '/');
+
+    if ($path === 'index.php') {
+        $path = '';
+    }
+
     if ($path === '') {
         (new HomeController($categoryRepository, $postRepository))->index();
     } elseif (preg_match('#^category/(\d+)$#', $path, $matches) === 1) {
         (new CategoryController($categoryRepository, $postRepository))->show((int) $matches[1]);
     } elseif (preg_match('#^post/(\d+)$#', $path, $matches) === 1) {
         (new PostController($postRepository))->show((int) $matches[1]);
+    } elseif ($path === 'sections') {
+        $pageController->sections();
+    } elseif ($path === 'about') {
+        $pageController->about();
     } else {
         throw new NotFoundException('Page not found.');
     }
 } catch (NotFoundException) {
     http_response_code(404);
-    View::render('404.tpl', ['title' => 'Страница не найдена']);
+    View::render('errors/404.tpl', ['title' => 'Страница не найдена']);
+} catch (Throwable $e) {
+    error_log((string) $e);
+
+    http_response_code(500);
+    View::render('errors/500.tpl', ['title' => 'Ошибка сервера']);
 }

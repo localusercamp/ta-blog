@@ -34,7 +34,7 @@ final class HomeController
             $categories,
         );
 
-        View::render('home.tpl', [
+        View::render('pages/home.tpl', [
             'title' => config('app.name'),
             'sections' => $sections,
         ]);

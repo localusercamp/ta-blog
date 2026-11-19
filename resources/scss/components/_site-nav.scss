@@ -1,0 +1,52 @@
+@use "../abstracts/breakpoints" as bp;
+
+.site-nav {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    display: none;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.4rem 0 1rem;
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    box-shadow: 0 16px 32px rgba(36, 41, 47, 0.12);
+
+    &.is-open {
+        display: flex;
+    }
+
+    @include bp.up(lg) {
+        position: static;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.15rem 0.35rem;
+        margin-left: auto;
+        padding: 0;
+        border: 0;
+        background-color: transparent;
+        box-shadow: none;
+    }
+}
+
+.site-nav__link {
+    padding: 0.7rem 0.6rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    font-size: 0.98rem;
+
+    &:hover {
+        background-color: var(--color-accent-soft);
+        color: var(--color-accent);
+        text-decoration: none;
+    }
+
+    @include bp.up(lg) {
+        padding: 0.3rem 0.55rem;
+        border-radius: var(--radius-pill);
+        font-size: 0.92rem;
+    }
+}

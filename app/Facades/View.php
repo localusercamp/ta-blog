@@ -12,6 +12,11 @@ final class View extends Facade
 
     private Smarty $smarty;
 
+    /**
+     * @var array<string, mixed>
+     */
+    private array $shared = [];
+
     public function __construct(
         string $template_dir,
         string $compile_dir,
@@ -27,9 +32,19 @@ final class View extends Facade
         $this->smarty = $smarty;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
+    public static function share(array $data): void
+    {
+        $view = self::instance();
+        $view->shared = array_merge($view->shared, $data);
+    }
+
     public static function render(string $template, array $data = []): void
     {
-        self::instance()->smarty->assign($data);
-        self::instance()->smarty->display($template);
+        $view = self::instance();
+        $view->smarty->assign(array_merge($view->shared, $data));
+        $view->smarty->display($template);
     }
 }

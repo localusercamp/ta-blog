@@ -62,6 +62,26 @@ final class PostRepository
         return $this->hydrateMany($stmt->fetchAll());
     }
 
+    /**
+     * @return array<int, int>
+     */
+    public function getPostCountsByCategory(): array
+    {
+        $rows = DB::pdo()->query(<<<SQL
+            SELECT category_id, COUNT(*) AS post_count
+            FROM category_post
+            GROUP BY category_id
+        SQL)->fetchAll();
+
+        $counts = [];
+
+        foreach ($rows as $row) {
+            $counts[(int) $row['category_id']] = (int) $row['post_count'];
+        }
+
+        return $counts;
+    }
+
     public function getPostCountByCategory(int $categoryId): int
     {
         $stmt = DB::pdo()->prepare(<<<SQL
@@ -130,7 +150,30 @@ final class PostRepository
     /**
      * @return list<Post>
      */
-    public function getSimilarPosts(Post $post): array
+    public function getSimilarPosts(Post $post, int $limit = 3): array
+    {
+        $limit = max(1, $limit);
+        $similarPosts = $this->findSimilarPosts($post, $limit);
+
+        if (count($similarPosts) >= $limit) {
+            return $similarPosts;
+        }
+
+        $excludeIds = array_merge(
+            [$post->id],
+            array_map(static fn (Post $similar): int => $similar->id, $similarPosts),
+        );
+
+        return array_merge(
+            $similarPosts,
+            $this->getLatestPostsExcluding($excludeIds, $limit - count($similarPosts)),
+        );
+    }
+
+    /**
+     * @return list<Post>
+     */
+    private function findSimilarPosts(Post $post, int $limit): array
     {
         $stmt = DB::pdo()->prepare(<<<SQL
             SELECT p.*
@@ -144,10 +187,40 @@ final class PostRepository
             AND p.id <> :excluded_id
             GROUP BY p.id
             ORDER BY COUNT(*) DESC, p.published_at DESC, p.id DESC
+            LIMIT :limit
         SQL);
 
         $stmt->bindValue('target_id', $post->id, PDO::PARAM_INT);
         $stmt->bindValue('excluded_id', $post->id, PDO::PARAM_INT);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $this->hydrateMany($stmt->fetchAll());
+    }
+
+    /**
+     * @param list<int> $excludeIds
+     * @return list<Post>
+     */
+    private function getLatestPostsExcluding(array $excludeIds, int $limit): array
+    {
+        $limit = max(1, $limit);
+        $sql = 'SELECT * FROM posts';
+
+        if ($excludeIds !== []) {
+            $placeholders = implode(',', array_fill(0, count($excludeIds), '?'));
+            $sql .= " WHERE id NOT IN ({$placeholders})";
+        }
+
+        $sql .= ' ORDER BY published_at DESC, id DESC LIMIT ?';
+
+        $stmt = DB::pdo()->prepare($sql);
+
+        foreach (array_values($excludeIds) as $index => $id) {
+            $stmt->bindValue($index + 1, $id, PDO::PARAM_INT);
+        }
+
+        $stmt->bindValue(count($excludeIds) + 1, $limit, PDO::PARAM_INT);
         $stmt->execute();
 
         return $this->hydrateMany($stmt->fetchAll());

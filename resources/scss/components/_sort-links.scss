@@ -1,0 +1,27 @@
+.sort-links {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.sort-link {
+    padding: 0.35rem 0.8rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+
+    &:hover {
+        background-color: var(--color-accent-soft);
+        color: var(--color-accent);
+        text-decoration: none;
+    }
+
+    &--active {
+        background-color: var(--color-accent);
+        color: #fff;
+
+        &:hover {
+            background-color: var(--color-accent-hover);
+            color: #fff;
+        }
+    }
+}

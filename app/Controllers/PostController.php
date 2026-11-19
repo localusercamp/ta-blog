@@ -17,16 +17,17 @@ final class PostController
 
     public function show(int $id): void
     {
-        $this->posts->incrementViews($id);
         $post = $this->posts->getPostById($id);
 
         if ($post === null) {
             throw new NotFoundException(sprintf('Post %d not found.', $id));
         }
 
-        $similarPosts = array_slice($this->posts->getSimilarPosts($post), 0, 3);
+        $this->posts->incrementViews($id);
 
-        View::render('post.tpl', [
+        $similarPosts = $this->posts->getSimilarPosts($post, 3);
+
+        View::render('pages/post.tpl', [
             'title' => $post->title,
             'post' => $post,
             'similarPosts' => $similarPosts,

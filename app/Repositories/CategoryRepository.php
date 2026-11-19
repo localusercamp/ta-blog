@@ -28,6 +28,23 @@ final class CategoryRepository
     /**
      * @return list<Category>
      */
+    public function getAllCategories(): array
+    {
+        $stmt = DB::pdo()->query(<<<SQL
+            SELECT id, title, description
+            FROM categories
+            ORDER BY id
+        SQL);
+
+        return array_map(
+            fn (array $row): Category => $this->hydrate($row),
+            $stmt->fetchAll(),
+        );
+    }
+
+    /**
+     * @return list<Category>
+     */
     public function getCategoriesWithPosts(): array
     {
         $stmt = DB::pdo()->query(<<<SQL
